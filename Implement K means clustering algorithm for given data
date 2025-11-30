@@ -1,0 +1,90 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+import pandas as pd
+from sklearn.cluster import KMeans
+
+np.random.seed(25)
+X=np.random.randint(100,size=(100,2))
+print(X)
+
+# Coverting program in anomoly detection
+X[99]=[8,150]
+X[98]=[10,160]
+
+print(X)
+
+kmeans = KMeans(n_clusters = 5, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+y_kmeans = kmeans.fit_predict(X)
+
+print(y_kmeans)
+
+#Visualising the clusters
+plt.scatter(X[y_kmeans == 0, 0], X[y_kmeans == 0, 1], s = 100, c = 'red')
+plt.scatter(X[y_kmeans == 1, 0], X[y_kmeans == 1, 1], s = 100, c = 'blue')
+plt.scatter(X[y_kmeans == 2, 0], X[y_kmeans == 2, 1], s = 100, c = 'green')
+plt.scatter(X[y_kmeans == 3, 0], X[y_kmeans == 3, 1], s = 100, c = 'cyan')
+plt.scatter(X[y_kmeans == 4, 0], X[y_kmeans == 4, 1], s = 100, c = 'magenta')
+#Plotting the centroids of the clusters
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:,1], s = 200, c = 'yellow', label = 'Centroids')
+
+plt.legend()
+
+from sklearn.cluster import KMeans
+wcss = []
+
+for i in range(1, 10):
+    kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+#Plotting the results onto a line graph, allowing us to observe 'The elbow'
+plt.plot(range(1, 10), wcss)
+plt.title('The elbow method')
+plt.xlabel('Number of clusters')
+plt.ylabel('WCSS') #within cluster sum of squares
+plt.show()
+
+from sklearn.metrics import silhouette_score
+
+SS=[]
+kmeans = KMeans(n_clusters = 5, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+kmeans.fit(X)
+labels = kmeans.labels_
+SS=silhouette_score(X,labels,metric='euclidean')
+print(SS)
+print(labels)
+
+from sklearn.metrics import silhouette_score
+SS=[]
+for i in range(2,10):
+    kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+    kmeans.fit(X)
+    labels = kmeans.labels_
+    ss=silhouette_score(X,labels,metric='euclidean')
+    SS.append(ss)
+
+#Plotting the results onto a line graph, allowing us to observe 'The elbow'
+plt.plot(range(2, 10),SS)
+plt.title('The silhouette score method')
+plt.xlabel('Number of clusters')
+plt.ylabel('SS') #within cluster sum of squares
+plt.show()
+
+#Iris Flower Clustering using K Means
+
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+kmeans = KMeans(n_clusters = 3, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+y_kmeans = kmeans.fit_predict(X)
+
+#Visualising the clusters
+plt.scatter(X[y_kmeans == 0, 0], X[y_kmeans == 0, 1], s = 100, c = 'red', label = 'Iris-setosa')
+plt.scatter(X[y_kmeans == 1, 0], X[y_kmeans == 1, 1], s = 100, c = 'blue', label = 'Iris-versicolour')
+plt.scatter(X[y_kmeans == 2, 0], X[y_kmeans == 2, 1], s = 100, c = 'green', label = 'Iris-virginica')
+#Plotting the centroids of the clusters
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:,1], s = 200, c = 'yellow', label = 'Centroids')
+
+plt.legend()
