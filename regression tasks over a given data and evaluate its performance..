@@ -1,0 +1,132 @@
+# ---------------------------------------------------------------
+# STEP 1: IMPORT LIBRARIES
+# ---------------------------------------------------------------
+
+from google.colab import files
+import pandas as pd
+import numpy as np
+import io
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow import keras
+
+# ---------------------------------------------------------------
+# STEP 2: UPLOAD THE HOUSING DATASET
+# ---------------------------------------------------------------
+
+print("Upload the housing.csv file...")
+uploaded = files.upload()
+
+# Automatically detect filename (works even if name changes)
+filename = list(uploaded.keys())[0]
+
+# Read CSV file
+df = pd.read_csv(io.BytesIO(uploaded[filename]))
+
+# ---------------------------------------------------------------
+# STEP 3: DATA CLEANING & PREPROCESSING
+# ---------------------------------------------------------------
+
+df.dropna(inplace=True)    # Remove rows with missing values
+
+# Separate target variable (label)
+Y = df['median_house_value']
+
+# Remove non-numeric column and target column from features
+X = df.drop(['median_house_value', 'ocean_proximity'], axis=1)
+
+# Normalize data → converts all features to range [0, 1]
+X_norm = (X - X.min()) / (X.max() - X.min())
+
+# Convert to numpy arrays
+X = X_norm.values
+Y = Y.values
+
+# ---------------------------------------------------------------
+# STEP 4: TRAIN–TEST SPLIT
+# ---------------------------------------------------------------
+
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.3, random_state=42
+)
+
+# ---------------------------------------------------------------
+# STEP 5: BUILD NEURAL NETWORK MODEL
+# ---------------------------------------------------------------
+
+model = keras.Sequential([
+    keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(1)   # Output layer → 1 value (house price)
+])
+
+# Adam → best optimizer for regression
+model.compile(
+    loss='mae',                # Mean Absolute Error
+    optimizer=keras.optimizers.Adam(0.001)
+)
+
+# ---------------------------------------------------------------
+# STEP 6: TRAIN THE MODEL
+# ---------------------------------------------------------------
+
+history = model.fit(
+    X_train, Y_train,
+    epochs=50,
+    batch_size=32,
+    validation_data=(X_test, Y_test),
+    verbose=1
+)
+
+# ---------------------------------------------------------------
+# STEP 7: EVALUATE MODEL
+# ---------------------------------------------------------------
+
+test_mae = model.evaluate(X_test, Y_test)
+print("\nTest MAE (Mean Absolute Error):", test_mae)
+
+# ---------------------------------------------------------------
+# STEP 8: PREDICT ON TEST DATA
+# ---------------------------------------------------------------
+
+X_new = X_test[:50]           # Pick first 50 samples
+Y_pred = model.predict(X_new) # Predict prices
+
+print("\nFirst 5 Predictions:\n", Y_pred[:5])
+
+# ---------------------------------------------------------------
+# STEP 9: SCATTER PLOT
+# ---------------------------------------------------------------
+
+plt.figure(figsize=(7,7))
+plt.scatter(Y_test[:50], Y_pred, color='blue')
+
+# Regression line y = m*x + b
+m, b = np.polyfit(Y_test[:50], Y_pred.flatten(), 1)
+plt.plot(Y_test[:50], m*Y_test[:50] + b, color='red')
+
+plt.title("Actual vs Predicted Housing Prices")
+plt.xlabel("Actual Prices")
+plt.ylabel("Predicted Prices")
+plt.grid()
+plt.show()
+
+# ---------------------------------------------------------------
+# STEP 10: LINE PLOT (Actual vs Predicted)
+# ---------------------------------------------------------------
+
+plt.figure(figsize=(10,5))
+plt.plot(np.arange(0,50), Y_test[:50], 'b--', label="Actual")
+plt.plot(np.arange(0,50), Y_pred, 'r-', label="Predicted")
+
+plt.title("Actual vs Predicted Values (Line Plot)")
+plt.xlabel("Sample Index")
+plt.ylabel("House Value")
+plt.legend()
+plt.show()
+
+# ---------------------------------------------------------------
+# END OF PROGRAM
+# ---------------------------------------------------------------
+print("\n✔ Program Completed Successfully!")
