@@ -1,1 +1,85 @@
+# -------------------------------------------
+# IMPORT REQUIRED LIBRARIES
+# -------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix
+
+# ============================================================
+# PART A: BINARY CLASSIFICATION USING BANKNOTE AUTHENTICATION
+# ============================================================
+
+print("\n========== PART A: Banknote Authentication ==========\n")
+
+# Load dataset (ensure bill_authentication.csv is in same folder)
+bankdata = pd.read_csv("bill_authentication.csv")
+
+print("Banknote Dataset Shape:", bankdata.shape)
+print("\nFirst 5 rows:\n", bankdata.head())
+
+# Split features and labels
+X = bankdata.drop('Class', axis=1)
+y = bankdata['Class']
+
+# Train-test split (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42
+)
+
+# Train SVM classifier (Linear Kernel)
+svclassifier = SVC(kernel='linear')
+svclassifier.fit(X_train, y_train)
+
+# Make predictions
+y_pred = svclassifier.predict(X_test)
+
+# Evaluate performance
+print("\n=== Confusion Matrix (Banknote Authentication) ===")
+print(confusion_matrix(y_test, y_pred))
+
+print("\n=== Classification Report (Banknote Authentication) ===")
+print(classification_report(y_test, y_pred))
+
+# ============================================================
+# PART B: MULTI-CLASS CLASSIFICATION USING IRIS DATASET
+# ============================================================
+
+print("\n\n========== PART B: IRIS Dataset Classification ==========\n")
+
+# Load dataset from URL
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
+
+colnames = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'Class']
+irisdata = pd.read_csv(url, names=colnames)
+
+print("Iris Dataset Shape:", irisdata.shape)
+print("\nFirst 5 rows:\n", irisdata.head())
+
+# Split features and labels
+X = irisdata.drop('Class', axis=1)
+y = irisdata['Class']
+
+# Train-test split (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42
+)
+
+# Train SVM classifier (Polynomial Kernel)
+svclassifier = SVC(kernel='poly', degree=8)
+# Alternative: SVC(kernel='rbf')
+
+svclassifier.fit(X_train, y_train)
+
+# Make predictions
+y_pred = svclassifier.predict(X_test)
+
+# Evaluation
+print("\n=== Confusion Matrix (Iris Dataset) ===")
+print(confusion_matrix(y_test, y_pred))
+
+print("\n=== Classification Report (Iris Dataset) ===")
+print(classification_report(y_test, y_pred))
 
