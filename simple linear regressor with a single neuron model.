@@ -1,0 +1,83 @@
+
+from google.colab import files
+uploaded = files.upload()
+
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+import io
+
+# ------------------ LOAD DATA ------------------
+df = pd.read_excel(io.BytesIO(uploaded[list(uploaded.keys())[0]]))
+
+df = df.values
+
+xs = df[:, 0].reshape(-1, 1)   # FIX 1: reshape needed
+ys = df[:, 1].reshape(-1, 1)
+
+# ------------------ TRAIN–TEST SPLIT ------------------
+X_train, X_test, Y_train, Y_test = train_test_split(
+    xs, ys, test_size=0.30, random_state=42
+)
+
+# ------------------ MODEL ------------------
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(8, activation='relu', input_dim=1),
+    tf.keras.layers.Dense(4, activation='relu'),
+    tf.keras.layers.Dense(1)
+])
+
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),   # FIX 2: LR reduced
+    loss='mse',
+    metrics=['mse']
+)
+
+model.summary()
+
+# ------------------ TRAIN ------------------
+history = model.fit(X_train, Y_train, epochs=300, verbose=0)
+
+# ------------------ EVALUATE ------------------
+print("\n# Evaluate on test data")
+results = model.evaluate(X_test, Y_test)
+print("Test Loss (MSE):", results)
+
+# ------------------ PREDICT ------------------
+y_pred = model.predict(X_test)
+
+# ------------------ PLOT 1: Actual vs Predicted (Line) ------------------
+plt.figure(figsize=(10,5))
+plt.plot(Y_test[:20], 'b--', label='Actual')
+plt.plot(y_pred[:20], 'r:', label='Predicted')
+plt.title('Actual vs Predicted Values')
+plt.xlabel('Sample')
+plt.ylabel('Value')
+plt.legend()
+plt.show()
+
+# ------------------ PLOT 2: Scatter + Regression Line ------------------
+plt.figure(figsize=(7,7))
+plt.scatter(Y_test, y_pred)
+
+m, b = np.polyfit(Y_test.flatten(), y_pred.flatten(), 1)
+plt.plot(Y_test, m*Y_test + b, color='red')
+
+plt.title('Actual vs Predicted (Regression Line)')
+plt.xlabel("Actual")
+plt.ylabel("Predicted")
+plt.grid()
+plt.show()
+
+# ------------------ METRICS ------------------
+r2 = r2_score(Y_test, y_pred)
+mse = mean_squared_error(Y_test, y_pred)
+mae = mean_absolute_error(Y_test, y_pred)
+
+print(f"R² Score: {r2:.4f}")
+print(f"MSE: {mse:.4f}")
+print(f"MAE: {mae:.4f}")
