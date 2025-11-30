@@ -1,0 +1,88 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# XOR Dataset
+# -----------------------------
+X = np.array([[0,0],[0,1],[1,0],[1,1]])
+Y = np.array([[0],[1],[1],[0]])
+
+# -----------------------------
+# Initialize weights and biases
+# -----------------------------
+np.random.seed(42)
+w_hidden = np.random.rand(2,2)    # 2 inputs -> 2 hidden neurons
+b_hidden = np.random.rand(2,1)    # bias for hidden layer
+w_output = np.random.rand(1,2)    # 2 hidden neurons -> 1 output
+b_output = np.random.rand(1,1)    # bias for output
+lr = 0.5                           # learning rate
+
+# -----------------------------
+# Activation functions
+# -----------------------------
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x*(1-x)
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x)**2
+
+# -----------------------------
+# Training the MLP
+# -----------------------------
+iterations = 10000
+errors = []
+
+for itr in range(iterations):
+    total_error = 0
+    for i in range(X.shape[0]):
+        x = X[i].reshape(2,1)
+        y_true = Y[i].reshape(1,1)
+
+        # Forward pass
+        z_hidden = np.dot(w_hidden, x) + b_hidden
+        h = np.tanh(z_hidden)
+        z_out = np.dot(w_output, h) + b_output
+        y_pred = sigmoid(z_out)
+
+        # Compute error
+        e = y_true - y_pred
+        total_error += e**2/2
+
+        # Backpropagation
+        delta_out = e * sigmoid_derivative(y_pred)
+        dw_output = np.dot(delta_out, h.T)
+        db_output = delta_out
+
+        delta_hidden = np.dot(w_output.T, delta_out) * tanh_derivative(z_hidden)
+        dw_hidden = np.dot(delta_hidden, x.T)
+        db_hidden = delta_hidden
+
+        # Update weights and biases
+        w_output += lr * dw_output
+        b_output += lr * db_output
+        w_hidden += lr * dw_hidden
+        b_hidden += lr * db_hidden
+
+    errors.append(total_error[0][0])
+
+# -----------------------------
+# Plot training error
+# -----------------------------
+plt.plot(errors)
+plt.title("Training Error over Iterations")
+plt.xlabel("Iteration")
+plt.ylabel("Error")
+plt.show()
+
+# -----------------------------
+# Test MLP on XOR inputs
+# -----------------------------
+print("Predictions after training:")
+for i in range(X.shape[0]):
+    x = X[i].reshape(2,1)
+    h = np.tanh(np.dot(w_hidden, x) + b_hidden)
+    y_pred = sigmoid(np.dot(w_output, h) + b_output)
+    print(f"Input: {X[i]} -> Predicted: {np.round(y_pred[0][0])}, Actual: {Y[i][0]}")
